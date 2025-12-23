@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미리캔버스 키워드 Lab PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700&display=swap');
+        body { font-family: 'Pretendard', sans-serif; background-color: #ffffff; color: #1e293b; overflow-x: hidden; }
+        
+        /* 핀터레스트 스타일 슬라이딩 사이드바 */
+        .sidebar { width: 72px; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; white-space: nowrap; border-right: 1px solid #f1f5f9; background: #fff; position: fixed; height: 100vh; z-index: 100; }
+        .sidebar:hover { width: 240px; }
+        .menu-item { display: flex; align-items: center; padding: 14px 24px; color: #64748b; transition: all 0.2s; cursor: pointer; }
+        .menu-item:hover { background-color: #f8fafc; color: #0f172a; }
+        .menu-item i { font-size: 20px; min-width: 24px; text-align: center; }
+        .menu-text { margin-left: 16px; opacity: 0; transition: opacity 0.2s; font-weight: 400; }
+        .sidebar:hover .menu-text { opacity: 1; }
+        .menu-item.active { color: #4f46e5; }
+        .menu-item.active .menu-text { font-weight: 700; opacity: 1; }
+
+        .main-content { margin-left: 72px; padding: 40px; max-width: 1200px; transition: margin-left 0.3s; }
+        .copy-toast { visibility: hidden; min-width: 250px; background-color: #1e293b; color: #fff; text-align: center; border-radius: 12px; padding: 16px; position: fixed; z-index: 200; left: 50%; transform: translateX(-50%); bottom: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .copy-toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 32px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 32px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    </style>
+</head>
+<body class="flex">
+
+    <aside class="sidebar shadow-sm">
+        <div class="p-6 mb-8 text-indigo-600">
+            <i class="fas fa-vial text-2xl"></i>
+        </div>
+        <nav class="flex-1 space-y-1">
+            <div onclick="setCategory('element', this)" class="menu-item active">
+                <i class="fas fa-shapes"></i><span class="menu-text">요소용 (Elements)</span>
+            </div>
+            <div onclick="setCategory('template', this)" class="menu-item">
+                <i class="fas fa-layer-group"></i><span class="menu-text">템플릿용 (Templates)</span>
+            </div>
+            <div class="border-t border-slate-50 my-4"></div>
+            <div class="px-6 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest menu-text">Quick Links</div>
+            <a href="https://designhub.miricanvas.com" target="_blank" class="menu-item">
+                <i class="fas fa-external-link-alt"></i><span class="menu-text">디자인허브 바로가기</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content flex-1">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-2 italic">Keyword Lab PRO</h2>
+                <p class="text-slate-400 font-medium tracking-tight">2026 병오년 및 연간 고수요 TOP 10 실시간 리포트</p>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto p-1 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                <input type="text" id="keywordInput" placeholder="주제 입력 (예: 여름, 추석, 비즈니스)" class="px-5 py-2 w-full md:w-64 outline-none text-sm font-medium">
+                <button onclick="analyzeKeyword()" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all">분석</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+            <div onclick="autoSearch('2026 붉은 말')" class="p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-lg transition-all cursor-pointer group">
+                <span class="text-xl font-black text-red-400 italic mb-2 block">Q1: 신년</span>
+                <h4 class="font-bold text-sm text-slate-800">병오년/졸업/입학</h4>
+            </div>
+            <div onclick="autoSearch('가정의달')" class="p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-lg transition-all cursor-pointer group">
+                <span class="text-xl font-black text-indigo-400 italic mb-2 block">Q2: 감사</span>
+                <h4 class="font-bold text-sm text-slate-800">어린이날/어버이날</h4>
+            </div>
+            <div onclick="autoSearch('여름')" class="p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-lg transition-all cursor-pointer group">
+                <span class="text-xl font-black text-green-400 italic mb-2 block">Q3: 휴가</span>
+                <h4 class="font-bold text-sm text-slate-800">바다/추석/방학</h4>
+            </div>
+            <div onclick="autoSearch('겨울')" class="p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-lg transition-all cursor-pointer group">
+                <span class="text-xl font-black text-blue-400 italic mb-2 block">Q4: 시즌</span>
+                <h4 class="font-bold text-sm text-slate-800">할로윈/크리스마스</h4>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div class="lg:col-span-8 overflow-hidden rounded-2xl border border-slate-100">
+                <table class="w-full text-left bg-white">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                        <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <th class="px-6 py-5">순위 / 추천 키워드 / 제목</th>
+                            <th class="px-6 py-5">구체적 제작 요소 (Drawing Hint)</th>
+                            <th class="px-6 py-5 text-center">수요지수</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultBody" class="text-sm divide-y divide-slate-50 text-slate-600">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="lg:col-span-4">
+                <div id="copySection" class="bg-slate-900 rounded-[2rem] p-8 text-white shadow-2xl sticky top-10">
+                    <h3 class="font-bold text-indigo-400 mb-6 flex items-center gap-2 text-sm uppercase tracking-wider">
+                        <i class="fas fa-magic"></i> 태그 자동 완성
+                    </h3>
+                    <div class="space-y-4">
+                        <textarea id="tagOutput" readonly rows="10" class="w-full bg-slate-800 border-none rounded-2xl text-[11px] p-4 text-indigo-100 leading-relaxed focus:outline-none resize-none"></textarea>
+                        <button onclick="copyToClipboard('tagOutput')" class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold transition-all shadow-lg">태그 일괄 복사</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="copy-toast font-bold italic">클립보드에 복사되었습니다.</div>
+
+    <script>
+        let currentCategory = 'element';
+        
+        // 확장된 주제별 구체적인 사물 데이터베이스
+        const extendedDB = {
+            "2026 붉은 말": [
+                { kw: "붉은 말 일러스트", item: "붉은 갈기, 황금 편자, 달리는 근육질 표현", title: "2026 병오년 역동적인 붉은 말 캐릭터 세트", star: "99%" },
+                { kw: "전통 복주머니", item: "자수 무늬, 붉은 비단 질감, 매듭 노리개", title: "새해 복을 부르는 한국 전통 복주머니 일러스트" },
+                { kw: "일출 프레임", item: "수평선 해돋이, 붉은 노을, 소나무 가지", title: "희망찬 2026년 시작을 알리는 신년 일출 배경" },
+                { kw: "말띠 캐릭터", item: "귀여운 아기 말, 한복 입은 말, 갓 쓴 말", title: "귀여운 말띠 해 신년 인사를 위한 캐릭터 소스" },
+                { kw: "전통 창살 배경", item: "격자 무늬, 한지 느낌 배경, 매화 가지", title: "한국적인 미가 돋보이는 전통 창살 프레임" },
+                { kw: "2026 골드 타이포", item: "입체적인 숫자 2026, 반짝이는 금색 질감", title: "화려한 신년 축하 2026 골드 타이포그래피" },
+                { kw: "연하장 세트", item: "학, 거북이, 구름 문양, 붓터치 배경", title: "고급스러운 수묵화 스타일의 신년 연하장 소스" },
+                { kw: "전통 노리개", item: "비단 매듭, 옥 장식, 붉은색 실 술", title: "한복과 잘 어울리는 섬세한 전통 장신구 노리개" },
+                { kw: "떡국 일러스트", item: "김 가루, 지단 고명, 하얀 가래떡, 유기그릇", title: "설날 분위기를 내는 따뜻한 떡국 한 그릇" },
+                { kw: "윷놀이 세트", item: "윷가락 네 개, 멍석 배경, 윷판 아이콘", title: "명절 전통 놀이 윷놀이 일러스트 아이콘 모음" }
+            ],
+            "가정의달": [
+                { kw: "카네이션 꽃다발", item: "빨간 카네이션, 핑크 리본, 레이스 포장", title: "어버이날 감사를 전하는 카네이션 수채화 일러스트" },
+                { kw: "어린이날 캐릭터", item: "풍선 든 아이들, 솜사탕, 놀이공원 배경", title: "꿈과 희망이 가득한 어린이날 귀여운 아동 캐릭터" },
+                { kw: "감사 상장", item: "금박 테두리, 월계수 문양, 하트 씰", title: "부모님께 드리는 세상에 하나뿐인 감사 상장 프레임" },
+                { kw: "가족 실루엣", item: "손 잡고 걷는 가족, 공원 배경, 따뜻한 색감", title: "화목한 가정의 달을 상징하는 따뜻한 가족 일러스트" },
+                { kw: "카네이션 화분", item: "토분, 초록 잎사귀, 카네이션 한 송이", title: "정성이 담긴 어버이날 카네이션 화분 소스" },
+                { kw: "용돈 박스", item: "상자 속 지폐 더미, 꽃 장식, 리본", title: "센스 있는 선물을 위한 어버이날 용돈 박스 프레임" },
+                { kw: "바람개비", item: "무지개색 바람개비, 푸른 들판, 구름", title: "동심을 자극하는 어린이날 야외 활동 소품" },
+                { kw: "선물 상자", item: "큰 리본이 달린 박스, 색종이 가루 효과", title: "축하와 감사를 전하는 화려한 선물 상자 아이콘" },
+                { kw: "하트 편지지", item: "편지 봉투, 하트 스티커, 손글씨 느낌", title: "진심 어린 마음을 전하는 가정의 달 편지지 배경" },
+                { kw: "무지개 배경", item: "일곱 빛깔 무지개, 뭉게구름, 파란 하늘", title: "밝고 희망찬 가정의 달 테마 무지개 배경지" }
+            ],
+            "여름": [
+                { kw: "파도 일러스트", item: "부서지는 파도, 푸른 바다, 서핑보드", title: "시원한 여름 바다 파도 일러스트 배경 소스" },
+                { kw: "열대 과일", item: "수박 조각, 파인애플, 야자수, 시원한 음료", title: "여름의 맛을 살려주는 싱그러운 열대 과일 세트" },
+                { kw: "아이스크림", item: "소프트콘, 막대 하드, 흘러내리는 질감", title: "달콤하고 시원한 여름 간식 아이스크림 아이콘" },
+                { kw: "물놀이 용품", item: "튜브, 물안경, 오리발, 선글라스, 비치볼", title: "바캉스 기분을 내는 귀여운 여름 물놀이 소품 모음" },
+                { kw: "야자수 잎", item: "커다란 몬스테라, 야자수 나무, 그림자 효과", title: "트로피컬 무드의 여름 감성 야자수 잎 일러스트" },
+                { kw: "아이스 아메리카노", item: "얼음 가득한 유리컵, 빨대, 커피 물방울", title: "여름 필수 아이템 시원한 아이스 커피 일러스트" },
+                { kw: "캠핑 용품", item: "텐트, 모닥불, 캠핑 의자, 밤하늘 별", title: "여름 밤의 낭만을 담은 캠핑 및 차박 요소 세트" },
+                { kw: "선글라스", item: "바다가 비치는 렌즈, 화려한 프레임", title: "여름 패션의 완성 세련된 선글라스 일러스트" },
+                { kw: "불꽃놀이", item: "밤하늘 터지는 불꽃, 화려한 색감, 빛 망울", title: "여름 축제 분위기를 극대화하는 불꽃놀이 배경" },
+                { kw: "해변 파라솔", item: "줄무늬 파라솔, 모래사장, 조개껍데기", title: "해변 휴양지의 여유로움을 담은 파라솔 일러스트" }
+            ]
+        };
+
+        function setCategory(cat, el) {
+            currentCategory = cat;
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+            analyzeKeyword();
+        }
+
+        function analyzeKeyword() {
+            const input = document.getElementById('keywordInput').value.trim();
+            if (!input) return;
+
+            const body = document.getElementById('resultBody');
+            body.innerHTML = '';
+            
+            // 데이터베이스 탐색 및 10위권 생성
+            let items = extendedDB[input] || [];
+            if (items.length === 0) {
+                for(let i=1; i<=10; i++) {
+                    items.push({
+                        kw: `${input} ${i}순위`,
+                        item: `${input} 관련 핵심 소품 ${i}`,
+                        title: `${input} 테마의 추천 디자인 제목 ${i}`,
+                        star: `${100 - (i*3)}%`
+                    });
+                }
+            }
+
+            items.forEach((item, index) => {
+                body.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="copyText('${item.kw}')">
+                        <td class="px-6 py-6">
+                            <div class="flex items-center gap-4">
+                                <span class="text-[10px] font-black text-indigo-300 italic">${String(index+1).padStart(2, '0')}</span>
+                                <div>
+                                    <div class="font-bold text-slate-800 mb-0.5">${item.kw}</div>
+                                    <div class="text-[10px] text-slate-400">[추천제목] ${item.title}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-6">
+                            <div class="flex items-center gap-2">
+                                <span class="text-indigo-600"><i class="fas fa-pencil-alt text-[10px]"></i></span>
+                                <span class="text-xs font-semibold text-slate-600">${item.item}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-6 text-center text-[11px] font-bold text-slate-400">${item.star}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('tagOutput').value = items.map(r => r.kw).join(', ') + `, ${input}, 2026, 디자인허브`;
+        }
+
+        function autoSearch(val) {
+            document.getElementById('keywordInput').value = val;
+            analyzeKeyword();
+        }
+
+        function copyToClipboard(id) {
+            const el = document.getElementById(id); el.select();
+            navigator.clipboard.writeText(el.value); showToast();
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text); showToast();
+        }
+
+        function showToast() {
+            const toast = document.getElementById("toast");
+            toast.className = "copy-toast show";
+            setTimeout(() => { toast.className = "copy-toast"; }, 2500);
+        }
+
+        window.onload = () => { autoSearch('2026 붉은 말'); };
+    </script>
+</body>
+</html>
